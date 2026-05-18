@@ -4,7 +4,21 @@
 
 This Skill is part of the **colony-brain** ecosystem.
 
-Parent ecosystem:
+## Public GPT
+
+Use the official GPT here:
+
+```text
+https://chatgpt.com/g/g-6a0a755a220881918878077b69e285fd-worldwidebridges-mvp-allmight
+```
+
+## Landing page
+
+```text
+https://striveks.github.io/WorldWideBridges.MVP-allmight/
+```
+
+## Parent ecosystem
 
 ```text
 https://github.com/StriveKS/colony-brain
@@ -32,7 +46,21 @@ It helps users:
 
 ## Quick start
 
-### Option 1: Manual use in any LLM
+### Option 1: Use the public GPT
+
+Open:
+
+```text
+https://chatgpt.com/g/g-6a0a755a220881918878077b69e285fd-worldwidebridges-mvp-allmight
+```
+
+Then say:
+
+```text
+Activate WorldWideBridges.MVP-allmight for this project.
+```
+
+### Option 2: Manual use in any LLM
 
 1. Open [`SKILL.md`](./SKILL.md).
 2. Copy its content.
@@ -43,7 +71,7 @@ It helps users:
 Activate WorldWideBridges.MVP-allmight for this project.
 ```
 
-### Option 2: Claude Code
+### Option 3: Claude Code
 
 ```bash
 mkdir -p ~/.claude/skills/WorldWideBridges.MVP-allmight
@@ -57,7 +85,7 @@ Then use:
 /WorldWideBridges.MVP-allmight
 ```
 
-### Option 3: ChatGPT or other LLMs
+### Option 4: ChatGPT or other LLMs
 
 Use `SKILL.md` as an instruction file, custom GPT knowledge file, project instruction, or Skill package when your platform supports Agent Skills.
 
