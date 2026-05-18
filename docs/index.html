@@ -4,113 +4,621 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>WorldWideBridges.MVP-allmight</title>
-  <meta name="description" content="An open Agent Skill for building free-first MVPs with native connections, Google Workspace, GitHub, Apps Script and portable project memory.">
+  <meta name="description" content="An open Agent Skill for launching real MVPs. Free-first. With the tools you already have.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     :root {
-      --bg: #0f172a;
-      --panel: #111827;
-      --text: #e5e7eb;
-      --muted: #9ca3af;
-      --line: #334155;
-      --accent: #38bdf8;
-      --accent2: #a78bfa;
+      --void:         #07070A;
+      --surface:      #0D0D12;
+      --surface2:     #121218;
+      --border:       rgba(232,160,0,0.12);
+      --border-hover: rgba(232,160,0,0.4);
+      --gold:         #E8A000;
+      --gold-bright:  #FFB830;
+      --gold-dim:     rgba(232,160,0,0.12);
+      --text:         #F0EDE8;
+      --text-mid:     #B0ABA6;
+      --muted:        #5C5A56;
+      --mono:        'Space Mono', monospace;
+      --display:     'Syne', sans-serif;
     }
-    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
     body {
-      margin: 0;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: radial-gradient(circle at top left, #1e3a8a 0, transparent 28%), var(--bg);
+      background: var(--void);
       color: var(--text);
-      line-height: 1.6;
+      font-family: var(--mono);
+      font-size: 15px;
+      line-height: 1.7;
+      overflow-x: hidden;
+      cursor: none;
     }
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    .wrap { max-width: 1080px; margin: 0 auto; padding: 40px 20px 72px; }
-    .hero { padding: 64px 0 40px; }
-    .badge { display: inline-block; border: 1px solid var(--line); color: var(--muted); border-radius: 999px; padding: 6px 12px; font-size: 14px; }
-    h1 { font-size: clamp(42px, 8vw, 82px); line-height: 0.95; margin: 24px 0; letter-spacing: -0.06em; }
-    h2 { font-size: 30px; margin-top: 56px; letter-spacing: -0.03em; }
-    h3 { font-size: 20px; margin-top: 0; }
-    p.lead { font-size: 22px; max-width: 800px; color: #d1d5db; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 24px; }
-    .card { background: rgba(17, 24, 39, 0.82); border: 1px solid var(--line); border-radius: 18px; padding: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.18); }
-    .buttons { display: flex; flex-wrap: wrap; gap: 12px; margin: 28px 0; }
-    .button { display: inline-block; border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; background: #0b1220; font-weight: 700; }
-    .button.primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #0b1220; border: none; }
-    code, pre { background: #020617; color: #dbeafe; border: 1px solid var(--line); border-radius: 12px; }
-    pre { padding: 16px; overflow-x: auto; }
-    code { padding: 2px 6px; }
-    ul { padding-left: 20px; }
-    .footer { margin-top: 72px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 24px; }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .cursor {
+      position: fixed; width: 8px; height: 8px;
+      background: var(--gold); border-radius: 50%;
+      pointer-events: none; z-index: 9999;
+      transform: translate(-50%,-50%);
+      transition: width .2s, height .2s;
+      mix-blend-mode: difference;
+    }
+    .cursor-ring {
+      position: fixed; width: 36px; height: 36px;
+      border: 1px solid rgba(232,160,0,.45); border-radius: 50%;
+      pointer-events: none; z-index: 9998;
+      transform: translate(-50%,-50%);
+      transition: width .2s, height .2s;
+    }
+
+    #canvas {
+      position: fixed; inset: 0;
+      width: 100%; height: 100%;
+      z-index: 0; opacity: .32;
+    }
+
+    .wrap {
+      position: relative; z-index: 2;
+      max-width: 1100px; margin: 0 auto; padding: 0 40px;
+    }
+
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 22px 40px;
+      display: flex; justify-content: space-between; align-items: center;
+      background: linear-gradient(to bottom, rgba(7,7,10,.92) 0%, transparent 100%);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(232,160,0,.06);
+    }
+    .nav-logo {
+      font-family: var(--mono); font-size: 12px; font-weight: 700;
+      color: var(--gold); letter-spacing: .1em; text-transform: uppercase;
+    }
+    .nav-links { display: flex; gap: 32px; list-style: none; }
+    .nav-links a {
+      color: var(--muted); text-decoration: none;
+      font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+      transition: color .2s; cursor: none;
+    }
+    .nav-links a:hover { color: var(--gold); }
+
+    .hero {
+      min-height: 100vh; padding-top: 140px; padding-bottom: 100px;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      position: relative;
+    }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 10px;
+      border: 1px solid var(--border); color: var(--muted);
+      border-radius: 4px; padding: 7px 16px;
+      font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+      margin-bottom: 48px;
+      opacity: 0; animation: fadeUp .7s .2s ease forwards;
+    }
+    .badge-dot {
+      width: 6px; height: 6px; background: var(--gold);
+      border-radius: 50%; animation: blink 2.2s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+    h1 {
+      font-family: var(--display);
+      font-size: clamp(52px, 8.5vw, 106px);
+      font-weight: 800; line-height: .92;
+      letter-spacing: -.045em; margin-bottom: 40px;
+    }
+
+    .word { display: inline-block; overflow: hidden; margin-right: .2em; }
+    .word-inner {
+      display: inline-block;
+      transform: translateY(110%); opacity: 0;
+    }
+    .word-inner.revealed {
+      animation: wordUp .85s cubic-bezier(.16,1,.3,1) forwards;
+    }
+    @keyframes wordUp { to { transform: translateY(0); opacity: 1; } }
+
+    .lead {
+      font-size: clamp(15px, 1.8vw, 18px); color: var(--text-mid);
+      max-width: 600px; line-height: 1.75; margin-bottom: 48px;
+      opacity: 0; animation: fadeUp .7s 1.3s ease forwards;
+    }
+
+    .cta-row {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      opacity: 0; animation: fadeUp .7s 1.6s ease forwards;
+    }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform: translateY(18px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 22px; border-radius: 6px;
+      font-family: var(--mono); font-size: 13px; font-weight: 700;
+      text-decoration: none; letter-spacing: .02em;
+      transition: all .22s; cursor: none;
+    }
+    .btn-primary {
+      background: var(--gold); color: var(--void);
+      position: relative; overflow: hidden;
+    }
+    .btn-primary::after {
+      content: '';
+      position: absolute; top:0; left:-100%; width:100%; height:100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.22), transparent);
+      animation: shimmer 3.5s infinite;
+    }
+    @keyframes shimmer { to { left: 200%; } }
+    .btn-primary:hover {
+      background: var(--gold-bright);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 36px rgba(232,160,0,.28);
+    }
+    .btn-ghost {
+      background: transparent; color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover {
+      border-color: var(--border-hover);
+      color: var(--gold); background: var(--gold-dim);
+    }
+
+    .scroll-caret {
+      position: absolute; bottom: 36px; left: 0;
+      display: flex; flex-direction: column; align-items: flex-start;
+      gap: 8px; opacity: 0; animation: fadeUp .7s 2s ease forwards;
+    }
+    .scroll-caret span { font-size: 10px; color: var(--muted); letter-spacing: .14em; text-transform: uppercase; }
+    .scroll-line {
+      width: 1px; height: 48px;
+      background: linear-gradient(to bottom, var(--gold), transparent);
+      animation: lineAnim 2.2s ease-in-out infinite;
+    }
+    @keyframes lineAnim {
+      0%   { transform: scaleY(0); transform-origin: top; opacity:1; }
+      49%  { transform: scaleY(1); transform-origin: top; opacity:1; }
+      50%  { transform: scaleY(1); transform-origin: bottom; opacity:1; }
+      100% { transform: scaleY(0); transform-origin: bottom; opacity:0; }
+    }
+
+    section { padding: 96px 0; position: relative; z-index: 2; }
+
+    .section-tag {
+      font-size: 11px; color: var(--gold);
+      letter-spacing: .22em; text-transform: uppercase;
+      font-family: var(--mono); margin-bottom: 18px;
+    }
+
+    h2 {
+      font-family: var(--display);
+      font-size: clamp(30px, 4.5vw, 56px);
+      font-weight: 800; letter-spacing: -.04em; line-height: .96;
+      margin-bottom: 52px;
+    }
+
+    .grid4 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1px; background: var(--border);
+      border: 1px solid var(--border);
+    }
+    .card {
+      background: var(--surface); padding: 32px;
+      transition: background .3s;
+    }
+    .card:hover { background: var(--surface2); }
+    .card-icon {
+      font-size: 22px; color: var(--gold);
+      display: block; margin-bottom: 18px;
+      font-style: normal;
+    }
+    .card h3 {
+      font-family: var(--display); font-size: 19px;
+      font-weight: 700; letter-spacing: -.02em; margin-bottom: 10px;
+    }
+    .card p { font-size: 13.5px; color: var(--text-mid); line-height: 1.75; }
+
+    .terminal {
+      background: #000; border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden; margin-top: 40px;
+    }
+    .t-bar {
+      background: var(--surface2); padding: 12px 18px;
+      display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .dot { width: 11px; height: 11px; border-radius: 50%; }
+    .dr { background: #FF5F57; } .dy { background: #FFBD2E; } .dg { background: #28CA41; }
+    .t-body {
+      padding: 28px 32px;
+      font-family: var(--mono); font-size: 13.5px; line-height: 2;
+    }
+    .tl { display: block; }
+    .tp { color: var(--gold); }
+    .tc { color: #fff; }
+    .tm { color: var(--muted); }
+    .to { color: #00FF88; }
+
+    .divider { height: 1px; background: var(--border); position: relative; z-index: 2; }
+
+    .flywheel {
+      display: flex; align-items: stretch;
+      flex-wrap: wrap; margin-top: 48px;
+      border: 1px solid var(--border);
+    }
+    .fw-node {
+      flex: 1; min-width: 160px; padding: 36px 28px;
+      border-right: 1px solid var(--border);
+      transition: background .25s;
+    }
+    .fw-node:last-child { border-right: none; }
+    .fw-node:hover { background: var(--surface); }
+    .fw-num {
+      font-size: 10px; color: var(--gold); letter-spacing: .2em;
+      text-transform: uppercase; margin-bottom: 14px; display: block;
+    }
+    .fw-label {
+      font-family: var(--display); font-size: 21px;
+      font-weight: 700; letter-spacing: -.02em;
+    }
+    .fw-sub { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+
+    .big-quote {
+      font-family: var(--display); font-size: clamp(22px, 3.5vw, 40px);
+      font-weight: 700; letter-spacing: -.03em; line-height: 1.15;
+      color: var(--text-mid); padding: 64px 0; border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border); margin: 48px 0 0;
+    }
+    .big-quote em { color: var(--gold); font-style: normal; }
+
+    footer {
+      position: relative; z-index: 2; padding: 44px 0;
+      border-top: 1px solid var(--border);
+    }
+    .footer-inner {
+      display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 16px;
+    }
+    footer p { color: var(--muted); font-size: 12px; }
+    .footer-links { display: flex; gap: 24px; list-style: none; }
+    .footer-links a {
+      color: var(--muted); text-decoration: none;
+      font-size: 11px; letter-spacing: .07em; text-transform: uppercase;
+      transition: color .2s; cursor: none;
+    }
+    .footer-links a:hover { color: var(--gold); }
+
+    .aos {
+      opacity: 0; transform: translateY(28px);
+      transition: opacity .85s cubic-bezier(.16,1,.3,1),
+                  transform .85s cubic-bezier(.16,1,.3,1);
+    }
+    .aos.in { opacity: 1; transform: translateY(0); }
+    .d1 { transition-delay: .08s; }
+    .d2 { transition-delay: .18s; }
+    .d3 { transition-delay: .28s; }
+    .d4 { transition-delay: .38s; }
+
+    @media (max-width: 680px) {
+      .wrap { padding: 0 20px; }
+      nav { padding: 16px 20px; }
+      .nav-links { display: none; }
+      body { cursor: auto; }
+      .cursor, .cursor-ring { display: none; }
+      .fw-node { min-width: 48%; border-bottom: 1px solid var(--border); }
+    }
   </style>
 </head>
 <body>
-  <main class="wrap">
+
+  <div class="cursor" id="cur"></div>
+  <div class="cursor-ring" id="ring"></div>
+
+  <canvas id="canvas"></canvas>
+
+  <nav>
+    <div class="nav-logo">WWB · MVP-allmight</div>
+    <ul class="nav-links">
+      <li><a href="#what">Capabilities</a></li>
+      <li><a href="#start">Quick start</a></li>
+      <li><a href="#ecosystem">Ecosystem</a></li>
+      <li><a href="https://github.com/StriveKS/WorldWideBridges.MVP-allmight">GitHub ↗</a></li>
+    </ul>
+  </nav>
+
+  <div class="wrap">
     <section class="hero">
-      <span class="badge">Public beta · colony-brain ecosystem</span>
-      <h1>WorldWideBridges.<br>MVP-allmight</h1>
-      <p class="lead">An open Agent Skill for creating, organizing, launching and improving MVPs with free-first tools, native connections, Google Workspace, GitHub, Apps Script, marketing flows, delivery systems and portable project memory.</p>
-      <div class="buttons">
-        <a class="button primary" href="https://github.com/StriveKS/WorldWideBridges.MVP-allmight/blob/main/SKILL.md">Open SKILL.md</a>
-        <a class="button" href="https://github.com/StriveKS/WorldWideBridges.MVP-allmight">GitHub repo</a>
-        <a class="button" href="https://github.com/StriveKS/WorldWideBridges.MVP-allmight/blob/main/install.md">Install guide</a>
-        <a class="button" href="https://github.com/StriveKS/colony-brain">colony-brain</a>
+      <span class="badge"><span class="badge-dot"></span>Public beta · colony-brain ecosystem</span>
+      <h1 id="h1"></h1>
+      <p class="lead">
+        WorldWideBridges.MVP-allmight is an open Agent Skill for launching real MVPs —
+        free-first, native connections, portable memory. With the tools you already have.
+      </p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="https://github.com/StriveKS/WorldWideBridges.MVP-allmight/blob/main/SKILL.md">Open SKILL.md →</a>
+        <a class="btn btn-ghost" href="https://github.com/StriveKS/WorldWideBridges.MVP-allmight">GitHub</a>
+        <a class="btn btn-ghost" href="https://github.com/StriveKS/WorldWideBridges.MVP-allmight/blob/main/install.md">Install guide</a>
+        <a class="btn btn-ghost" href="https://github.com/StriveKS/colony-brain">colony-brain</a>
+      </div>
+      <div class="scroll-caret">
+        <div class="scroll-line"></div>
+        <span>scroll</span>
       </div>
     </section>
+  </div>
 
+  <div class="divider"></div>
+
+  <div class="wrap" id="what">
     <section>
-      <h2>What it does</h2>
-      <div class="grid">
-        <div class="card"><h3>Free-first MVPs</h3><p>Always proposes a 100% free or near-free stack, plus a lowest-cost robust option.</p></div>
-        <div class="card"><h3>Native connections</h3><p>Prioritizes tools that are easy to authorize and operate through LLMs, Google Workspace, GitHub and APIs.</p></div>
-        <div class="card"><h3>Project memory</h3><p>Uses Markdown history files and tracking spreadsheets so projects can move across tools and LLMs without losing context.</p></div>
-        <div class="card"><h3>Skill ecosystem</h3><p>Detects reusable workflows that can become new Skills or improvements for colony-brain.</p></div>
+      <div class="section-tag aos">// 01 — capabilities</div>
+      <h2 class="aos">Tudo que você precisa<br>para lançar de verdade.</h2>
+      <div class="grid4">
+        <div class="card aos d1">
+          <i class="card-icon">◈</i>
+          <h3>Free-first MVPs</h3>
+          <p>Always starts with a 100% free or near-free stack. No credit card. No compromise on what gets built.</p>
+        </div>
+        <div class="card aos d2">
+          <i class="card-icon">⬡</i>
+          <h3>Native connections</h3>
+          <p>Google Workspace, GitHub, Apps Script — tools LLMs already know how to operate. No new infrastructure.</p>
+        </div>
+        <div class="card aos d3">
+          <i class="card-icon">◉</i>
+          <h3>Project memory</h3>
+          <p>Markdown history files and tracking spreadsheets. Context that survives tool switches and LLM migrations.</p>
+        </div>
+        <div class="card aos d4">
+          <i class="card-icon">⟳</i>
+          <h3>Skill ecosystem</h3>
+          <p>Detects reusable workflows. Your project becomes the next Skill that helps someone else build faster.</p>
+        </div>
       </div>
     </section>
+  </div>
 
+  <div class="divider"></div>
+
+  <div class="wrap" id="start">
     <section>
-      <h2>Quick start</h2>
-      <pre><code>1. Open SKILL.md
-2. Copy the content into your LLM or install as a Skill
-3. Say: "Activate WorldWideBridges.MVP-allmight for this project"
-4. Create project memory in Google Drive
-5. Build the free-first MVP stack</code></pre>
-    </section>
-
-    <section>
-      <h2>Recommended Drive structure</h2>
-      <pre><code>Projetos/
-  Memoria/
-    [PROJECT] - PROJECT_HISTORY.md
-    [PROJECT] - CONTEXTO_LLM.md
-    [PROJECT] - DECISOES.md
-    [PROJECT] - PROMPTS.md
-
-  Planilhas/
-    [PROJECT] - Acompanhamento</code></pre>
-    </section>
-
-    <section>
-      <h2>Use cases</h2>
-      <div class="grid">
-        <div class="card"><h3>Landing page MVP</h3><p>Canva Sites or Google Sites + Forms/Tally + Sheets + Apps Script + analytics.</p></div>
-        <div class="card"><h3>Internal automation</h3><p>Sheets as a lightweight database, Apps Script as automation, Drive as memory.</p></div>
-        <div class="card"><h3>Static app</h3><p>GitHub Pages or Cloudflare Pages with feedback capture and project history.</p></div>
-        <div class="card"><h3>Content validation</h3><p>Short videos, landing pages, lead capture and follow-up workflows.</p></div>
+      <div class="section-tag aos">// 02 — quick start</div>
+      <h2 class="aos">Cinco passos.<br>MVP no ar.</h2>
+      <div class="terminal aos">
+        <div class="t-bar">
+          <div class="dot dr"></div>
+          <div class="dot dy"></div>
+          <div class="dot dg"></div>
+        </div>
+        <div class="t-body">
+          <span class="tl"><span class="tp">$</span> <span class="tc">open SKILL.md</span></span>
+          <span class="tl tm"># 1. Copy the content into your LLM or install as a Skill</span>
+          <span class="tl">&nbsp;</span>
+          <span class="tl"><span class="tp">$</span> <span class="tc">activate WorldWideBridges.MVP-allmight</span></span>
+          <span class="tl tm"># 2. Say: "Activate WorldWideBridges.MVP-allmight for this project"</span>
+          <span class="tl">&nbsp;</span>
+          <span class="tl"><span class="tp">$</span> <span class="tc">init project-memory --drive</span></span>
+          <span class="tl tm"># 3. Create project memory in Google Drive</span>
+          <span class="tl">&nbsp;</span>
+          <span class="tl"><span class="tp">$</span> <span class="tc">build --stack free-first</span></span>
+          <span class="tl tm"># 4. Build the free-first MVP stack</span>
+          <span class="tl">&nbsp;</span>
+          <span class="tl"><span class="tp">$</span> <span class="tc">launch</span></span>
+          <span class="tl to">✓ MVP deployed. Memory saved. Stack documented.</span>
+        </div>
       </div>
     </section>
+  </div>
 
+  <div class="divider"></div>
+
+  <div class="wrap" id="ecosystem">
     <section>
-      <h2>Part of colony-brain</h2>
-      <p><strong>colony-brain</strong> is the parent ecosystem for reusable LLM Skills, operational memory and free-first project workflows.</p>
-      <pre><code>Projects create workflows.
-Useful workflows become Skills.
-Skills improve future projects.</code></pre>
+      <div class="section-tag aos">// 03 — colony-brain</div>
+      <h2 class="aos">O ecossistema que<br>cresce com quem usa.</h2>
+      <p class="aos" style="color:var(--text-mid);max-width:600px;font-size:15px;line-height:1.75;">
+        colony-brain is the parent ecosystem for reusable LLM Skills, operational memory and free-first project workflows. Every project feeds it. Every Skill improves the next project.
+      </p>
+      <div class="flywheel aos">
+        <div class="fw-node">
+          <span class="fw-num">01</span>
+          <div class="fw-label">Projects</div>
+          <div class="fw-sub">You build something real</div>
+        </div>
+        <div class="fw-node">
+          <span class="fw-num">02</span>
+          <div class="fw-label">Workflows</div>
+          <div class="fw-sub">Reusable patterns emerge</div>
+        </div>
+        <div class="fw-node">
+          <span class="fw-num">03</span>
+          <div class="fw-label">Skills</div>
+          <div class="fw-sub">Patterns become Skills</div>
+        </div>
+        <div class="fw-node">
+          <span class="fw-num">04</span>
+          <div class="fw-label">Better projects</div>
+          <div class="fw-sub">Skills accelerate the next build</div>
+        </div>
+      </div>
+      <div class="big-quote aos">
+        "Projects create workflows.<br>
+        Useful workflows become <em>Skills.</em><br>
+        Skills improve future projects."
+      </div>
     </section>
+  </div>
 
-    <footer class="footer">
-      <p>MIT licensed. Public beta. Built for people creating something real with the tools they already have.</p>
+  <div class="divider"></div>
+
+  <div class="wrap">
+    <section>
+      <div class="section-tag aos">// 04 — use cases</div>
+      <h2 class="aos">Do que isso<br>já foi capaz.</h2>
+      <div class="grid4">
+        <div class="card aos d1">
+          <i class="card-icon">⬕</i>
+          <h3>Landing page MVP</h3>
+          <p>Google Sites + Tally + Sheets + Apps Script + analytics. Live in under an hour, zero cost.</p>
+        </div>
+        <div class="card aos d2">
+          <i class="card-icon">⚙</i>
+          <h3>Internal automation</h3>
+          <p>Sheets as database, Apps Script as engine, Drive as persistent memory. No new SaaS required.</p>
+        </div>
+        <div class="card aos d3">
+          <i class="card-icon">◌</i>
+          <h3>Static app</h3>
+          <p>GitHub Pages or Cloudflare Pages with feedback capture and full project history baked in from day one.</p>
+        </div>
+        <div class="card aos d4">
+          <i class="card-icon">▷</i>
+          <h3>Content validation</h3>
+          <p>Short videos, landing pages, lead capture and follow-up workflows. Validate before you build.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="wrap">
+    <footer>
+      <div class="footer-inner">
+        <p>MIT licensed · Public beta · Built for people creating something real with the tools they already have.</p>
+        <ul class="footer-links">
+          <li><a href="https://github.com/StriveKS/WorldWideBridges.MVP-allmight">GitHub</a></li>
+          <li><a href="https://github.com/StriveKS/colony-brain">colony-brain</a></li>
+        </ul>
+      </div>
     </footer>
-  </main>
+  </div>
+
+  <script>
+  const cur = document.getElementById('cur');
+  const ring = document.getElementById('ring');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cur.style.left = mx + 'px';
+    cur.style.top  = my + 'px';
+  });
+
+  (function animRing() {
+    rx += (mx - rx) * 0.1;
+    ry += (my - ry) * 0.1;
+    ring.style.left = rx + 'px';
+    ring.style.top  = ry + 'px';
+    requestAnimationFrame(animRing);
+  })();
+
+  document.querySelectorAll('a, button').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cur.style.width  = '14px'; cur.style.height  = '14px';
+      ring.style.width = '54px'; ring.style.height = '54px';
+    });
+    el.addEventListener('mouseleave', () => {
+      cur.style.width  = '8px';  cur.style.height  = '8px';
+      ring.style.width = '36px'; ring.style.height = '36px';
+    });
+  });
+
+  const canvas = document.getElementById('canvas');
+  const ctx    = canvas.getContext('2d');
+  let W, H, pts;
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function init() {
+    const n = Math.floor((W * H) / 13000);
+    pts = Array.from({ length: n }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: (Math.random() - .5) * .38,
+      vy: (Math.random() - .5) * .38,
+      r: Math.random() * 1.4 + .4
+    }));
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    for (let i = 0; i < pts.length; i++) {
+      const p = pts[i];
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0 || p.x > W) p.vx *= -1;
+      if (p.y < 0 || p.y > H) p.vy *= -1;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(232,160,0,.75)';
+      ctx.fill();
+
+      for (let j = i + 1; j < pts.length; j++) {
+        const q  = pts[j];
+        const dx = p.x - q.x, dy = p.y - q.y;
+        const d  = Math.sqrt(dx * dx + dy * dy);
+        if (d < 145) {
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(q.x, q.y);
+          ctx.strokeStyle = `rgba(232,160,0,${(1 - d / 145) * .22})`;
+          ctx.lineWidth   = .5;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+
+  resize(); init(); draw();
+  window.addEventListener('resize', () => { resize(); init(); });
+
+  const words = "O mundo sempre foi dos que constroem.".split(' ');
+  const h1    = document.getElementById('h1');
+
+  words.forEach((w, i) => {
+    const outer = document.createElement('span');
+    outer.className = 'word';
+    const inner = document.createElement('span');
+    inner.className = 'word-inner';
+    inner.textContent = w;
+    if (i === words.length - 1) inner.style.color = 'var(--gold)';
+    outer.appendChild(inner);
+    h1.appendChild(outer);
+    if (i < words.length - 1) h1.appendChild(document.createTextNode(' '));
+  });
+
+  document.querySelectorAll('.word-inner').forEach((el, i) => {
+    setTimeout(() => el.classList.add('revealed'), 380 + i * 115);
+  });
+
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.aos').forEach(el => io.observe(el));
+  </script>
 </body>
 </html>
